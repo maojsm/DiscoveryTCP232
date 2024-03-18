@@ -43,7 +43,7 @@
             // 
             // btnDiscoverServers
             // 
-            btnDiscoverServers.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnDiscoverServers.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnDiscoverServers.Location = new Point(12, 145);
             btnDiscoverServers.Name = "btnDiscoverServers";
             btnDiscoverServers.Size = new Size(147, 42);
@@ -65,7 +65,7 @@
             // 
             // btnLimparLog
             // 
-            btnLimparLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnLimparLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnLimparLog.Location = new Point(165, 145);
             btnLimparLog.Name = "btnLimparLog";
             btnLimparLog.Size = new Size(145, 42);
@@ -78,7 +78,7 @@
             // 
             dataGridView.AllowUserToAddRows = false;
             dataGridView.AllowUserToDeleteRows = false;
-            dataGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dataGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             dataGridView.BorderStyle = BorderStyle.None;
             dataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridView.Columns.AddRange(new DataGridViewColumn[] { deviceNameColumn, ipColumn, macAddress });
@@ -119,7 +119,7 @@
             // 
             // pictureBox1
             // 
-            pictureBox1.Anchor = AnchorStyles.Right;
+            pictureBox1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             pictureBox1.Image = Properties.Resources.Tcp232;
             pictureBox1.Location = new Point(494, 13);
             pictureBox1.Name = "pictureBox1";
@@ -131,6 +131,7 @@
             // 
             // lblInfo
             // 
+            lblInfo.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             lblInfo.AutoSize = true;
             lblInfo.Location = new Point(347, 142);
             lblInfo.Name = "lblInfo";
@@ -149,6 +150,7 @@
             Controls.Add(btnLimparLog);
             Controls.Add(txtLog);
             Controls.Add(btnDiscoverServers);
+            MaximumSize = new Size(966, 590);
             MinimumSize = new Size(669, 377);
             Name = "FrmLocalizadorTcp232";
             Text = "Localizardor para Modulo TCP232-E2 da USR";
