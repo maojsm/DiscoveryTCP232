@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmLocalizadorTcp232));
             btnDiscoverServers = new Button();
             txtLog = new TextBox();
             btnLimparLog = new Button();
@@ -150,6 +151,7 @@
             Controls.Add(btnLimparLog);
             Controls.Add(txtLog);
             Controls.Add(btnDiscoverServers);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximumSize = new Size(966, 590);
             MinimumSize = new Size(669, 377);
             Name = "FrmLocalizadorTcp232";
