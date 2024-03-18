@@ -7,26 +7,32 @@ using System.Windows.Forms;
 
 namespace LocalizadorLocalJSM
 {
-    public partial class LocalizadorLocal : Form
+    public partial class FrmLocalizadorTcp232 : Form
     {
         const int Port = 1901;//45000;
 
-        public LocalizadorLocal()
+        public FrmLocalizadorTcp232()
         {
             InitializeComponent();
 
-            // Certifique-se de chamar esse método no construtor do seu form após o InitializeComponent()
-            dataGridView.Columns.Add("deviceNameColumn", "Device Name");
-            dataGridView.Columns.Add("staticIPColumn", "Static IP");
-            dataGridView.Columns.Add("userMACColumn", "MAC Address");
+            //// Certifique-se de chamar esse método no construtor do seu form após o InitializeComponent()
+            //dataGridView.Columns.Add("deviceNameColumn", "Device Name");
+            //dataGridView.Columns.Add("staticIPColumn", "Static IP");
+            //dataGridView.Columns.Add("userMACColumn", "MAC Address");
         }
 
 
-        // Suponha que você tenha um método para adicionar os dados ao DataGridView:
-        private void AddDeviceToDataGridView(string deviceName, string staticIP, string userMAC)
+        /// <summary>
+        /// Adiciona linha no DataGridView do Device localizado.
+        /// </summary>
+        /// <param name="modulo"></param>
+        private void AddDeviceToDataGridView(Tcp232SearchModel modulo)
         {
-            // Adicionando uma nova linha com os valores fornecidos
-            dataGridView.Rows.Add(deviceName, staticIP, userMAC);
+            if (modulo.IsValid)
+            {
+                // Adicionando uma nova linha com os valores fornecidos
+                dataGridView.Rows.Add(modulo.DeviceName, modulo.DeviceIp, modulo.DeviceMac);
+            }            
         }
 
         private void btnLimparLog_Click(object sender, EventArgs e)
@@ -38,44 +44,72 @@ namespace LocalizadorLocalJSM
         {
             txtLog.AppendText("Localizando módulos USR-TCP232 na rede...\r\n");
 
-            using (CancellationTokenSource cts = new CancellationTokenSource())
+            List<Tcp232SearchModel> tcp232SearchList = await USRTools.DiscoveryModulesUSR();
+
+            foreach (var modulo in tcp232SearchList)
             {
-                cts.CancelAfter(5000); // Set the timeout for 5 seconds
-                try
+                if (modulo != null && modulo.IsValid)
                 {
-                    List<UdpReceiveResult> servers = await USRTools.DiscoverServers(cts.Token);
-                    foreach (var server in servers)
-                    {
-                        string serverIP = server.RemoteEndPoint.Address.ToString();
-                        int serverPort = server.RemoteEndPoint.Port;
-                        txtLog.AppendText($"Server found: {serverIP}:{serverPort}\r\n");
+                    // Imprime informações de rede
+                    string serverIP = modulo.RemoteEndPoint.Address.ToString();
+                    int serverPort = modulo.RemoteEndPoint.Port;
+                    txtLog.AppendText($"Server found: {serverIP}:{serverPort}\r\n");
+                    // Imprime a resposta do modulo USR-TCP232
+                    txtLog.AppendText(modulo.ResponseBuffer);
+                    txtLog.AppendText("\r\n");
 
+                    // Adiciona no DataGridView
+                    AddDeviceToDataGridView(modulo);
 
-                        txtLog.AppendText(BitConverter.ToString(server.Buffer));
-                        txtLog.AppendText("\r\n");
-
-
-                        string deviceName = USRTools.ByteArrayToAsciiString(server.Buffer, 19, 16);
-                        string moduleStaticIP = $"{server.Buffer[5]}.{server.Buffer[6]}.{server.Buffer[7]}.{server.Buffer[8]}";
-                        string userMAC = BitConverter.ToString(server.Buffer, 9, 6);
-
-                        // E em algum ponto do seu código, você chama este método passando os dados que deseja adicionar:
-                        AddDeviceToDataGridView(deviceName, moduleStaticIP, userMAC);
-
-
-                        // Imprime a resposta do modulo USR-TCP232
-                        string respUSR = USRTools.RespParse(server.Buffer);
-                        txtLog.AppendText(respUSR);
-                        txtLog.AppendText("\r\n------------\r\n");
-                    }
+                    // Imprime Log dos dados do modulo
+                    txtLog.AppendText(modulo.ToString());
+                    
                 }
-                catch (OperationCanceledException)
+                else
                 {
-                    txtLog.AppendText("Operation was cancelled.\r\n");
+                    txtLog.AppendText("Dados invalidos ou nulos.\r\n");
                 }
+                txtLog.AppendText("\r\n------------\r\n");
+
             }
 
-            txtLog.AppendText("Localização concluída.\r\n");
+
+            //using (CancellationTokenSource cts = new CancellationTokenSource())
+            //{
+            //    cts.CancelAfter(5000); // Set the timeout for 5 seconds
+            //    try
+            //    {
+            //        List<UdpReceiveResult> responses = await USRTools.DiscoverServers(cts.Token);
+            //        foreach (var resp in responses)
+            //        {
+            //            string serverIP = resp.RemoteEndPoint.Address.ToString();
+            //            int serverPort = resp.RemoteEndPoint.Port;
+            //            txtLog.AppendText($"Server found: {serverIP}:{serverPort}\r\n");
+
+
+            //            txtLog.AppendText(BitConverter.ToString(resp.Buffer));
+            //            txtLog.AppendText("\r\n");
+
+            //            Tcp232SearchModel moduloTcp232 = new Tcp232SearchModel(resp.Buffer);
+            //            if (moduloTcp232.IsValid)
+            //            {     
+            //                // Adiciona no DataGridView
+            //                AddDeviceToDataGridView(moduloTcp232);
+
+            //                // Imprime a resposta do modulo USR-TCP232         
+            //                txtLog.AppendText(moduloTcp232.ToString());                            
+            //            }
+            //            txtLog.AppendText("\r\n------------\r\n");
+
+            //        }
+            //    }
+            //    catch (OperationCanceledException)
+            //    {
+            //        txtLog.AppendText("Operation was cancelled.\r\n");
+            //    }
+            //}
+
+            txtLog.AppendText("Pesquisa concluída.\r\n");
         }
 
     }

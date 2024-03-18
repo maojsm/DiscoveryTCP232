@@ -10,6 +10,36 @@ namespace USRLibray
 {
     public class USRTools
     {
+        public static async Task<List<Tcp232SearchModel>> DiscoveryModulesUSR(int timeout = 5000)
+        {
+            List<Tcp232SearchModel> tcp232SearchList = new List<Tcp232SearchModel>();
+
+            using (CancellationTokenSource cts = new CancellationTokenSource())
+            {
+                cts.CancelAfter(timeout); // Set the timeout for 5 seconds
+                try
+                {
+                    List<UdpReceiveResult> responses = await DiscoverServers(cts.Token);
+                    foreach (var resp in responses)
+                    { 
+                        Tcp232SearchModel moduloTcp232 = new Tcp232SearchModel(resp);
+                        if (moduloTcp232.IsValid)
+                        {
+                            tcp232SearchList.Add(moduloTcp232);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // This exception is expected when the cancellation token is triggered
+                }
+            }
+            return tcp232SearchList;
+        }
+
+
+
+
         /// <summary>
         /// Localiza equipamentos USR-TCP232 na rede local usando UDP em Broadcast.
         /// </summary>
@@ -23,7 +53,7 @@ namespace USRLibray
             using (var client = new UdpClient())
             {
                 client.EnableBroadcast = true;
-                var commandBytes = new byte[] { 0xFF, 0x01, 0x01, 0x02 };
+                var commandBytes = Tcp232SearchModel.QuerySearchUSRModule();
                 var broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, portUdp);
 
                 await client.SendAsync(commandBytes, commandBytes.Length, broadcastEndpoint);
@@ -60,74 +90,64 @@ namespace USRLibray
         }
 
 
-        public static string RespParse(byte[] responseBuffer)
-        {
+        // CONVERTER EM UMA CLASSE COM DOS DADOS DE 'else if (responseBuffer[2] == 0x03)'
+        //public static string RespParse(byte[] responseBuffer)
+        //{
 
-            if (responseBuffer[0] != 0xFF)
-            {
-                return $"Erro STX não Encontrado.";
-            }
-            if (responseBuffer[1] != responseBuffer.Length)
-            {
-                return $"Dados incompletos {responseBuffer[1]} != {responseBuffer.Length}.";
-            }
+        //    if (responseBuffer[0] != 0xFF)
+        //    {
+        //        return $"Erro STX não Encontrado.";
+        //    }
+        //    if (responseBuffer[1] != responseBuffer.Length)
+        //    {
+        //        return $"Dados incompletos {responseBuffer[1]} != {responseBuffer.Length}.";
+        //    }
 
-            StringBuilder sb = new StringBuilder();
+        //    StringBuilder sb = new StringBuilder();
 
-            // Procura modulo USR-TCP232 na rede usando a porta 1901.
-            if (responseBuffer[2] == 0x01)
-            {
-                string deviceName = ByteArrayToAsciiString(responseBuffer, 19, 16);
-                string moduleStaticIP = $"{responseBuffer[5]}.{responseBuffer[6]}.{responseBuffer[7]}.{responseBuffer[8]}";
-                string userMAC = BitConverter.ToString(responseBuffer, 9, 6);
+        //    // Procura modulo USR-TCP232 na rede usando a porta 1901.
+        //    if (responseBuffer[2] == 0x01)
+        //    {
+        //        Tcp232SearchModel module = new Tcp232SearchModel(responseBuffer);
+        //        if (module.IsValid)
+        //        {
+        //            sb.AppendLine(module.ToString());
+        //        }
+        //    }
+        //    // Configurações basicas do modulo USR-TCP232.
+        //    else if (responseBuffer[2] == 0x03)
+        //    {
+        //        string flagIpType = responseBuffer[3] == 0x80 ? "Static IP"/*0x00*/: "DHCP"/*0x80*/;
+        //        sb.AppendLine($"flagIpType = {flagIpType}");
+        //        string moduleStaticIP = $"{responseBuffer[12]}.{responseBuffer[11]}.{responseBuffer[10]}.{responseBuffer[9]}";
+        //        sb.AppendLine($"staticIP = {moduleStaticIP}");
+        //        string gatewayIP = $"{responseBuffer[16]}.{responseBuffer[15]}.{responseBuffer[14]}.{responseBuffer[13]}";
+        //        sb.AppendLine($"gatewayIP = {gatewayIP}");
+        //        string subNetMask = $"{responseBuffer[20]}.{responseBuffer[19]}.{responseBuffer[18]}.{responseBuffer[17]}";
+        //        sb.AppendLine($"subNetMask = {subNetMask}");
+        //        string daviceName = ByteArrayToAsciiString(responseBuffer, 21, 16);
+        //        sb.AppendLine($"daviceNameY: {daviceName}");
+        //        string userName = ByteArrayToAsciiString(responseBuffer, 37, 6);
+        //        sb.AppendLine($"userName = {userName}");
+        //        string password = ByteArrayToAsciiString(responseBuffer, 43, 6);
+        //        sb.AppendLine($"password = {password}");
+        //        string deviceID = $"{responseBuffer[50]}-{responseBuffer[51]}";
+        //        sb.AppendLine($"deviceID = {deviceID}");
+        //        string userMAC = BitConverter.ToString(responseBuffer, 53, 6);
+        //        sb.AppendLine($"userMAC = {userMAC}");
+        //        sb.AppendLine();
+        //    }
+        //    else
+        //    {
+        //        sb.AppendLine("Comando não reconhecido.");
+        //        sb.AppendLine();
+        //    }
 
-                sb.AppendLine($"deviceName: {deviceName}");
-                sb.AppendLine($"staticIP = {moduleStaticIP}");                
-                sb.AppendLine($"userMAC = {userMAC}");
-                
-
-            }
-            // Configurações basicas do modulo USR-TCP232.
-            else if (responseBuffer[2] == 0x03)
-            {
-                string flagIpType = responseBuffer[3] == 0x80 ? "Static IP"/*0x00*/: "DHCP"/*0x80*/;
-                sb.AppendLine($"flagIpType = {flagIpType}");
-                string moduleStaticIP = $"{responseBuffer[12]}.{responseBuffer[11]}.{responseBuffer[10]}.{responseBuffer[9]}";
-                sb.AppendLine($"staticIP = {moduleStaticIP}");
-                string gatewayIP = $"{responseBuffer[16]}.{responseBuffer[15]}.{responseBuffer[14]}.{responseBuffer[13]}";
-                sb.AppendLine($"gatewayIP = {gatewayIP}");
-                string subNetMask = $"{responseBuffer[20]}.{responseBuffer[19]}.{responseBuffer[18]}.{responseBuffer[17]}";
-                sb.AppendLine($"subNetMask = {subNetMask}");
-                string daviceName = ByteArrayToAsciiString(responseBuffer, 21, 16);
-                sb.AppendLine($"daviceNameY: {daviceName}");
-                string userName = ByteArrayToAsciiString(responseBuffer, 37, 6);
-                sb.AppendLine($"userName = {userName}");
-                string password = ByteArrayToAsciiString(responseBuffer, 43, 6);
-                sb.AppendLine($"password = {password}");
-                string deviceID = $"{responseBuffer[50]}-{responseBuffer[51]}";
-                sb.AppendLine($"deviceID = {deviceID}");
-                string userMAC = BitConverter.ToString(responseBuffer, 53, 6);
-                sb.AppendLine($"userMAC = {userMAC}");
-                sb.AppendLine();
-            }
-            else
-            {
-                sb.AppendLine("Comando não reconhecido.");
-                sb.AppendLine();
-            }
-
-            return sb.ToString();
-        }
+        //    return sb.ToString();
+        //}
 
 
-        /// <summary>
-        /// Comando para localizar modulos na rede. O comando é fixo independente das configurações do modulo
-        /// </summary>
-        /// <returns></returns>
-        public static byte[] SearchUSRModule()
-        {
-            return new byte[] { 0xFF, 0x01, 0x01, 0x02 };
-        }
+
 
         /// <summary>
         /// COMANDO DE CONSULTA ÀS CONFIGURAÇÕES BASICAS DO MODULO USR-TCP232
@@ -183,7 +203,8 @@ namespace USRLibray
 
 
         /// <summary>
-        /// Converte um array de bytes em uma string de caracteres ASCII
+        /// Converte um array de bytes em uma string de caracteres ASCII.
+        /// Toma o cuidado de não tentar converter bytes nulos em caracteres.
         /// </summary>
         /// <param name="byteArray"></param>
         /// <param name="startIndex"></param>
@@ -219,8 +240,6 @@ namespace USRLibray
                     sb.Append('.'); // Representa bytes não imprimíveis com um ponto
                 }
             }
-
-
             // Retorna a string construída
             return sb.ToString();
         }
