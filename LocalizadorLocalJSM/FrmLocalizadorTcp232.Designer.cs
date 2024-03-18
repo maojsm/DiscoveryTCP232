@@ -48,7 +48,7 @@
             btnDiscoverServers.Name = "btnDiscoverServers";
             btnDiscoverServers.Size = new Size(147, 42);
             btnDiscoverServers.TabIndex = 0;
-            btnDiscoverServers.Text = "Localizar";
+            btnDiscoverServers.Text = "Buscar Modulos";
             btnDiscoverServers.UseVisualStyleBackColor = true;
             btnDiscoverServers.Click += btnDiscoverServers_Click;
             // 
@@ -127,15 +127,16 @@
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox1.TabIndex = 4;
             pictureBox1.TabStop = false;
+            pictureBox1.DoubleClick += pictureBox1_DoubleClick;
             // 
             // lblInfo
             // 
             lblInfo.AutoSize = true;
-            lblInfo.Location = new Point(535, 172);
+            lblInfo.Location = new Point(347, 142);
             lblInfo.Name = "lblInfo";
-            lblInfo.Size = new Size(103, 15);
+            lblInfo.Size = new Size(141, 15);
             lblInfo.TabIndex = 5;
-            lblInfo.Text = "by Márcio da Silva";
+            lblInfo.Text = "by Márcio da Silva @2024";
             // 
             // FrmLocalizadorTcp232
             // 

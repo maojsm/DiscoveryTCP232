@@ -16,9 +16,9 @@ namespace USRLibray
         public string? DeviceMac { get; private set; }
         public bool IsValid => !string.IsNullOrEmpty(DeviceName) && !string.IsNullOrEmpty(DeviceIp) && !string.IsNullOrEmpty(DeviceMac);
         // Resposta em Hexadecimal para debug
-        public string? ResponseBuffer { get; private set; }
+        public string ResponseBuffer { get; private set; }
         // Aqui contém o IP e Porta do modulo
-        public IPEndPoint? RemoteEndPoint { get; set; }
+        public IPEndPoint RemoteEndPoint { get; private set; }
 
         public Tcp232SearchModel(UdpReceiveResult response)
         {
@@ -31,10 +31,13 @@ namespace USRLibray
                     DeviceName = USRTools.ByteArrayToAsciiString(response.Buffer, 19, 16);
                     DeviceIp = $"{response.Buffer[5]}.{response.Buffer[6]}.{response.Buffer[7]}.{response.Buffer[8]}";
                     DeviceMac = BitConverter.ToString(response.Buffer, 9, 6);
-                    ResponseBuffer = BitConverter.ToString(response.Buffer);
-                    RemoteEndPoint = response.RemoteEndPoint;
+                    
                 }
             }
+            // São preenchidos indepentende do comando ser valido.
+            // São na verdade dados de rede.
+            ResponseBuffer = BitConverter.ToString(response.Buffer);
+            RemoteEndPoint = response.RemoteEndPoint;
         }
 
         /// <summary>
